@@ -1,0 +1,14 @@
+package main
+
+/*
+A NeuronPoolSimulator simulates a pool of Neurons.
+*/
+type NeuronPoolSimulator interface {
+	Step()
+	GetNeuron(string) Neuron
+	AddNeuron(string, Neuron) string
+	GetType() string
+	AddEdge(Edge) int
+	GetEdges() []Edge
+	Init()
+}
