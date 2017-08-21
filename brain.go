@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"os"
 )
 
 /*
@@ -27,7 +26,10 @@ func (brain *Brain) Freeze() map[string]string {
 	return results
 }
 
-//
+/*
+Simulate the brain, stepping through until stopped.
+TODO: How to stop?!
+*/
 func (brain *Brain) Simulate() {
 	brain.simulator.Init()
 
@@ -37,20 +39,18 @@ func (brain *Brain) Simulate() {
 
 }
 
-//
+/*
+AddNeuron adds a neuron to the brain's simulator. It is simply a pass-through,
+and is entirely agnostic about what the simulator does with it.
+*/
 func (brain *Brain) AddNeuron(s string, n Neuron) string {
 	return brain.simulator.AddNeuron(s, n)
 }
 
-//
+/*
+AddEdge adds an edge between two neurons — and specifically, between two
+Segments. This is how you make a synapse happen!
+*/
 func (brain *Brain) AddEdge(e Edge) int {
 	return brain.simulator.AddEdge(e)
-}
-
-//
-func (brain *Brain) LoadNeuroMLNetwork(file os.File) {
-	defer file.Close()
-
-	// var data Query
-	// xml.Unmarshal(file, &q)
 }

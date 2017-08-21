@@ -36,6 +36,9 @@ func NewLocalNeuronPoolSimulator() *LocalNeuronPoolSimulator {
 	return &n
 }
 
+/*
+Init initializes the simulator.
+*/
 func (nsim *LocalNeuronPoolSimulator) Init() {
 	// Schedule all edge firings for this simulator:
 	// var wge sync.WaitGroup

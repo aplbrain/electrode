@@ -1,21 +1,40 @@
 package main
 
+/*
+A Segment handles the logic of local biophysics, or, in the simplest case,
+such as an IAFNeuron, simulates the neuron AP curve itself.
+*/
 type Segment interface {
 	GetMembranePotential() float64
 	SetMembranePotential(float64)
 	IncrementMembranePotential(float64) float64
 }
 
+/*
+A SimpleSegment changes mV according to a prescribed function and does not
+simulate ion channels.
+*/
 type SimpleSegment struct {
 	membranePotential float64
 }
 
+/*
+GetMembranePotential returns the membrane potential at a given region.
+*/
 func (segment *SimpleSegment) GetMembranePotential() float64 {
 	return segment.membranePotential
 }
+
+/*
+SetMembranePotential sets the membrane potential at this location.
+*/
 func (segment *SimpleSegment) SetMembranePotential(vm float64) {
 	segment.membranePotential = vm
 }
+
+/*
+IncrementMembranePotential increments the membrane potential at this location.
+*/
 func (segment *SimpleSegment) IncrementMembranePotential(vm float64) float64 {
 	segment.SetMembranePotential(vm)
 	return segment.GetMembranePotential()
