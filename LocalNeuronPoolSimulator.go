@@ -2,7 +2,6 @@ package main
 
 import (
 	"sync"
-	"time"
 )
 
 /*
@@ -10,7 +9,7 @@ Edge objects contain edge-information that underly the connectivity of
 a simple connectome model.
 */
 type Edge struct {
-	from, to string
+	from, to [2]string
 	latency  int64
 	weight   float64
 	// Unused:
@@ -27,6 +26,9 @@ type LocalNeuronPoolSimulator struct {
 	edges   []Edge
 }
 
+/*
+NewLocalNeuronPoolSimulator creates a new LocalNeuronPoolSimulator
+*/
 func NewLocalNeuronPoolSimulator() *LocalNeuronPoolSimulator {
 	n := LocalNeuronPoolSimulator{}
 	n.neurons = make(map[string]Neuron)
@@ -36,21 +38,21 @@ func NewLocalNeuronPoolSimulator() *LocalNeuronPoolSimulator {
 
 func (nsim *LocalNeuronPoolSimulator) Init() {
 	// Schedule all edge firings for this simulator:
-	var wge sync.WaitGroup
-	for e := 0; e < len(nsim.edges); e++ {
-		wge.Add(1)
-		go func(ee Edge) {
-			time.Sleep(time.Millisecond * time.Duration(ee.latency))
-			// time.Sleep(time.Second * time.Duration(ee.latency))
-			// timer := time.NewTimer(time.Second * time.Duration(ee.latency))
-			// <-timer.C
+	// var wge sync.WaitGroup
+	// for e := 0; e < len(nsim.edges); e++ {
+	// 	wge.Add(1)
+	// 	go func(ee Edge) {
+	// 		time.Sleep(time.Millisecond * time.Duration(ee.latency))
+	// 		// time.Sleep(time.Second * time.Duration(ee.latency))
+	// 		// timer := time.NewTimer(time.Second * time.Duration(ee.latency))
+	// 		// <-timer.C
 
-			println("!", ee.latency)
-			nsim.neurons[ee.to].Excite(ee.weight)
-			defer wge.Done()
-		}(nsim.edges[e])
-	}
-	wge.Wait()
+	// 		println("!", ee.latency)
+	// 		nsim.neurons[ee.to].Excite(ee.weight)
+	// 		defer wge.Done()
+	// 	}(nsim.edges[e])
+	// }
+	// wge.Wait()
 }
 
 /*
@@ -76,7 +78,7 @@ func (nsim *LocalNeuronPoolSimulator) GetType() string {
 }
 
 /*
-GetType returns the (string) type of the simulator.
+GetEdges returns the (string) type of the simulator.
 */
 func (nsim *LocalNeuronPoolSimulator) GetEdges() []Edge {
 	return nsim.edges
@@ -88,6 +90,13 @@ GetNeuron returns the neuron in the pool from the given key.
 func (nsim *LocalNeuronPoolSimulator) GetNeuron(key string) Neuron {
 	result, _ := nsim.neurons[key]
 	return result
+}
+
+/*
+GetNeurons returns the list of neurons neuron in the pool.
+*/
+func (nsim *LocalNeuronPoolSimulator) GetNeurons() map[string]Neuron {
+	return nsim.neurons
 }
 
 /*

@@ -1,7 +1,8 @@
 package main
 
 import (
-	"strings"
+	"encoding/json"
+	"fmt"
 )
 
 func main() {
@@ -10,28 +11,26 @@ func main() {
 		simulator: NewLocalNeuronPoolSimulator(),
 	}
 
-	// Demonstrate brain freeze:
-	output := b.Freeze()
-	printableResult := ""
-	for k, v := range output {
-		printableResult += k + strings.Repeat(" ", 15-len(k)) + v + "\n"
-	}
-	// fmt.Println(printableResult)
-
-	b.AddNeuron("AAAA", IAFNeuron{})
-	b.AddNeuron("AAAB", IAFNeuron{})
-	b.AddNeuron("AAAC", IAFNeuron{})
+	b.AddNeuron("AAAA", new(IAFNeuron))
+	b.AddNeuron("AAAB", new(IAFNeuron))
+	b.AddNeuron("AAAC", new(IAFNeuron))
 	b.AddEdge(Edge{
-		from:    "AAAA",
-		to:      "AAAB",
+		from:    [2]string{"AAAA", "1"},
+		to:      [2]string{"AAAB", "1"},
 		latency: 1,
 	})
 	b.AddEdge(Edge{
-		from:    "AAAA",
-		to:      "AAAC",
+		from:    [2]string{"AAAB", "1"},
+		to:      [2]string{"AAAC", "1"},
 		latency: 5,
 	})
+	b.AddEdge(Edge{
+		from:    [2]string{"AAAC", "1"},
+		to:      [2]string{"AAAA", "1"},
+		latency: 2,
+	})
 
-	// Run a single step:
-	b.Simulate()
+	froze, _ := json.MarshalIndent(b.Freeze(), "", "\t")
+	freeze := string(froze)
+	fmt.Println(freeze)
 }
