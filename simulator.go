@@ -12,4 +12,6 @@ type NeuronPoolSimulator interface {
 	AddEdge(Edge) int
 	GetEdges() []Edge
 	Init()
+	InsertElectrode(string, string) *Electrode
+	GetElectrodes() map[[2]string]Electrode
 }

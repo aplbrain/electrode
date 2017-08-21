@@ -51,7 +51,10 @@ type Neuron interface {
 	// Call all actions that rely on a neuron's firing of AP:
 	Fire()
 
-	GetSegments() []Segment
+	GetSegments() map[string]Segment
+
+	InsertElectrode(string, *Electrode)
+	GetSegment(string) Segment
 }
 
 /*
@@ -62,7 +65,8 @@ The neuron contains only a single segment.
 */
 type IAFNeuron struct {
 	// The constituent segments:
-	segments []Segment
+	segments   map[string]Segment
+	electrodes map[string]*Electrode
 }
 
 /*
@@ -70,6 +74,9 @@ NewIAFNeuron constructs a new IAFNeuron.
 */
 func NewIAFNeuron() *IAFNeuron {
 	n := IAFNeuron{}
+	n.electrodes = make(map[string]*Electrode)
+	n.segments = make(map[string]Segment)
+	n.segments["soma"] = new(SimpleSegment)
 	return &n
 }
 
@@ -77,7 +84,15 @@ func NewIAFNeuron() *IAFNeuron {
 Step through a single timepoint.
 */
 func (neuron *IAFNeuron) Step() {
-	//
+	for sname, seg := range neuron.segments {
+		if electrode, exists := neuron.electrodes[sname]; exists {
+			if electrode.pinCyclesRemaining > 0 {
+				electrode.pinCyclesRemaining--
+				seg.SetMembranePotential(electrode.input)
+			}
+			electrode.output = seg.GetMembranePotential()
+		}
+	}
 }
 
 /*
@@ -88,8 +103,22 @@ func (neuron *IAFNeuron) Fire() {
 }
 
 /*
+GetSegment from neuron
+*/
+func (neuron *IAFNeuron) GetSegment(s string) Segment {
+	return neuron.segments[s]
+}
+
+/*
 GetSegments returns the list of segments
 */
-func (neuron *IAFNeuron) GetSegments() []Segment {
+func (neuron *IAFNeuron) GetSegments() map[string]Segment {
 	return neuron.segments
+}
+
+/*
+InsertElectrode into a particular segment.
+*/
+func (neuron *IAFNeuron) InsertElectrode(s string, e *Electrode) {
+	neuron.electrodes[s] = e
 }

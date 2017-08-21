@@ -11,26 +11,32 @@ func main() {
 		simulator: NewLocalNeuronPoolSimulator(),
 	}
 
-	b.AddNeuron("AAAA", new(IAFNeuron))
-	b.AddNeuron("AAAB", new(IAFNeuron))
-	b.AddNeuron("AAAC", new(IAFNeuron))
-	b.AddEdge(Edge{
-		from:    [2]string{"AAAA", "1"},
-		to:      [2]string{"AAAB", "1"},
-		latency: 1,
+	b.AddNeuron("AAAA", NewIAFNeuron())
+	b.AddNeuron("AAAB", NewIAFNeuron())
+	b.AddNeuron("AAAC", NewIAFNeuron())
+	b.AddEdge(SimpleEdge{
+		from: [2]string{"AAAA", "soma"},
+		to:   [2]string{"AAAB", "soma"},
+		// latency: 1,
 	})
-	b.AddEdge(Edge{
-		from:    [2]string{"AAAB", "1"},
-		to:      [2]string{"AAAC", "1"},
-		latency: 5,
+	b.AddEdge(SimpleEdge{
+		from: [2]string{"AAAB", "soma"},
+		to:   [2]string{"AAAC", "soma"},
+		// latency: 5,
 	})
-	b.AddEdge(Edge{
-		from:    [2]string{"AAAC", "1"},
-		to:      [2]string{"AAAA", "1"},
-		latency: 2,
+	b.AddEdge(SimpleEdge{
+		from: [2]string{"AAAC", "soma"},
+		to:   [2]string{"AAAA", "soma"},
+		// latency: 2,
 	})
+
+	e := b.InsertElectrode("AAAA", "soma")
+	e.PinVoltage(10, 10)
+	print(e)
 
 	froze, _ := json.MarshalIndent(b.Freeze(), "", "\t")
 	freeze := string(froze)
 	fmt.Println(freeze)
+
+	b.Simulate()
 }

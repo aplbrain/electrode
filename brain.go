@@ -2,6 +2,8 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
+	"time"
 )
 
 /*
@@ -33,7 +35,23 @@ TODO: How to stop?!
 func (brain *Brain) Simulate() {
 	brain.simulator.Init()
 
-	for {
+	ticker := time.NewTicker(50 * time.Millisecond)
+	quit := make(chan struct{})
+	go func() {
+		for {
+			select {
+			case <-ticker.C:
+				for _, v := range brain.simulator.GetElectrodes() {
+					fmt.Printf("\r %f", v.Read())
+				}
+			case <-quit:
+				ticker.Stop()
+				return
+			}
+		}
+	}()
+
+	for f := 0; f < 1; f++ {
 		brain.simulator.Step()
 	}
 
@@ -53,4 +71,11 @@ Segments. This is how you make a synapse happen!
 */
 func (brain *Brain) AddEdge(e Edge) int {
 	return brain.simulator.AddEdge(e)
+}
+
+/*
+InsertElectrode adds an electrode to the brain for IO.
+*/
+func (brain *Brain) InsertElectrode(neuron, location string) *Electrode {
+	return brain.simulator.InsertElectrode(neuron, location)
 }

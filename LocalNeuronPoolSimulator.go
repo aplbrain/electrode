@@ -1,29 +1,13 @@
 package main
 
-import (
-	"sync"
-)
-
-/*
-Edge objects contain edge-information that underly the connectivity of
-a simple connectome model.
-*/
-type Edge struct {
-	from, to [2]string
-	latency  int64
-	weight   float64
-	// Unused:
-	lambda float64
-	tau    float64
-}
-
 /*
 A LocalNeuronPoolSimulator runs all simulation on the user's local machine.
 It uses a map of neurons to keep track.
 */
 type LocalNeuronPoolSimulator struct {
-	neurons map[string]Neuron
-	edges   []Edge
+	electrodes map[[2]string]Electrode
+	neurons    map[string]Neuron
+	edges      []Edge
 }
 
 /*
@@ -31,6 +15,7 @@ NewLocalNeuronPoolSimulator creates a new LocalNeuronPoolSimulator
 */
 func NewLocalNeuronPoolSimulator() *LocalNeuronPoolSimulator {
 	n := LocalNeuronPoolSimulator{}
+	n.electrodes = make(map[[2]string]Electrode)
 	n.neurons = make(map[string]Neuron)
 	n.edges = make([]Edge, 0)
 	return &n
@@ -62,15 +47,17 @@ func (nsim *LocalNeuronPoolSimulator) Init() {
 Step through a single timestep.
 */
 func (nsim *LocalNeuronPoolSimulator) Step() {
-	var wg sync.WaitGroup
+	// var wg sync.WaitGroup
 	for _, n := range nsim.neurons {
-		wg.Add(1)
-		go func(ni Neuron) {
-			ni.Step()
-			defer wg.Done()
-		}(n)
+		// wg.Add(1)
+		// go func(ni Neuron) {
+		// 	ni.Step()
+		// defer wg.Done()
+		// }(n)
+		n.Step()
 	}
-	wg.Wait()
+
+	// wg.Wait()
 }
 
 /*
@@ -122,4 +109,38 @@ func (nsim *LocalNeuronPoolSimulator) AddEdge(e Edge) int {
 	nsim.edges = append(nsim.edges, e)
 	// fmt.Println(len(nsim.edges))
 	return len(nsim.edges)
+}
+
+/*
+RegisterElectrode into the brainsim.
+*/
+func (nsim *LocalNeuronPoolSimulator) RegisterElectrode(n, s string, e *Electrode) {
+	nsim.electrodes[[2]string{n, s}] = *e
+}
+
+/*
+ReadElectrode into the brainsim.
+*/
+func (nsim *LocalNeuronPoolSimulator) ReadElectrode(n, s string, e *Electrode) {
+	nsim.electrodes[[2]string{n, s}] = *e
+}
+
+/*
+InsertElectrode into the brainsim.
+*/
+func (nsim *LocalNeuronPoolSimulator) InsertElectrode(n, s string) *Electrode {
+	e := Electrode{
+		neuron:             n,
+		segment:            s,
+		output:             0,
+		neuronLookup:       nsim.neurons,
+		pinCyclesRemaining: 0,
+	}
+	nsim.neurons[n].InsertElectrode(s, &e)
+	nsim.RegisterElectrode(n, s, &e)
+	return &e
+}
+
+func (nsim *LocalNeuronPoolSimulator) GetElectrodes() map[[2]string]Electrode {
+	return nsim.electrodes
 }
