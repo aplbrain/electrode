@@ -35,7 +35,7 @@ TODO: How to stop?!
 func (brain *Brain) Simulate() {
 	brain.simulator.Init()
 
-	ticker := time.NewTicker(50 * time.Millisecond)
+	ticker := time.NewTicker(5 * time.Millisecond)
 	quit := make(chan struct{})
 	go func() {
 		for {
@@ -51,8 +51,9 @@ func (brain *Brain) Simulate() {
 		}
 	}()
 
-	for f := 0; f < 1; f++ {
+	for f := 0; f < 1000; f++ {
 		brain.simulator.Step()
+		time.Sleep(time.Millisecond * 100)
 	}
 
 }

@@ -1,9 +1,6 @@
 package main
 
-import (
-	"encoding/json"
-	"fmt"
-)
+import "time"
 
 func main() {
 	// Create a new Brain and set its simulator:
@@ -31,12 +28,25 @@ func main() {
 	})
 
 	e := b.InsertElectrode("AAAA", "soma")
-	e.PinVoltage(10, 10)
-	print(e)
 
-	froze, _ := json.MarshalIndent(b.Freeze(), "", "\t")
-	freeze := string(froze)
-	fmt.Println(freeze)
+	ticker := time.NewTicker(5 * time.Second)
+	quit := make(chan struct{})
+	go func() {
+		for {
+			select {
+			case <-ticker.C:
+				e.PinVoltage(10, 10)
+
+			case <-quit:
+				ticker.Stop()
+				return
+			}
+		}
+	}()
+
+	// froze, _ := json.MarshalIndent(b.Freeze(), "", "\t")
+	// freeze := string(froze)
+	// fmt.Println(freeze)
 
 	b.Simulate()
 }

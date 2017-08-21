@@ -85,6 +85,7 @@ Step through a single timepoint.
 */
 func (neuron *IAFNeuron) Step() {
 	for sname, seg := range neuron.segments {
+		seg.SetMembranePotential(seg.GetMembranePotential() * 0.9)
 		if electrode, exists := neuron.electrodes[sname]; exists {
 			if electrode.pinCyclesRemaining > 0 {
 				electrode.pinCyclesRemaining--
