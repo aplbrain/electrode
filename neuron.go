@@ -8,6 +8,9 @@ type Segment interface {
 	GetMembranePotential() float64
 	SetMembranePotential(float64)
 	IncrementMembranePotential(float64) float64
+	GetDownstreamEdges() []*Edge
+	GetDownstreamSegments() []*Segment
+	AddDownstreamEdge(*Edge)
 }
 
 /*
@@ -15,7 +18,16 @@ A SimpleSegment changes mV according to a prescribed function and does not
 simulate ion channels.
 */
 type SimpleSegment struct {
-	membranePotential float64
+	membranePotential  float64
+	downstreamEdges    []*Edge
+	downstreamSegments []*Segment
+}
+
+func (segment *SimpleSegment) GetDownstreamEdges() []*Edge {
+	return segment.downstreamEdges
+}
+func (segment *SimpleSegment) GetDownstreamSegments() []*Segment {
+	return segment.downstreamSegments
 }
 
 /*
@@ -76,7 +88,11 @@ func NewIAFNeuron() *IAFNeuron {
 	n := IAFNeuron{}
 	n.electrodes = make(map[string]*Electrode)
 	n.segments = make(map[string]Segment)
-	n.segments["soma"] = new(SimpleSegment)
+	n.segments["soma"] = &SimpleSegment{
+		0,
+		[]*Edge{},
+		[]*Segment{},
+	}
 	return &n
 }
 
@@ -85,7 +101,13 @@ Step through a single timepoint.
 */
 func (neuron *IAFNeuron) Step() {
 	for sname, seg := range neuron.segments {
+		print(seg.GetDownstreamEdges()[0].GetFrom()[0])
+
 		seg.SetMembranePotential(seg.GetMembranePotential() * 0.9)
+		// TODO: Propagate membrane potential to neighbors
+
+		// TODO: Hop edges across synapses.
+
 		if electrode, exists := neuron.electrodes[sname]; exists {
 			if electrode.pinCyclesRemaining > 0 {
 				electrode.pinCyclesRemaining--
@@ -101,6 +123,10 @@ Fire is the canonical Callback for an IAF to Fire.
 */
 func (neuron *IAFNeuron) Fire() {
 	// TODO: Read listeners and execute
+}
+
+func (segment *SimpleSegment) AddDownstreamEdge(e *Edge) {
+	segment.downstreamEdges = append(segment.downstreamEdges, e)
 }
 
 /*

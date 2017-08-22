@@ -41,8 +41,9 @@ func (brain *Brain) Simulate() {
 		for {
 			select {
 			case <-ticker.C:
+				fmt.Printf("\r")
 				for _, v := range brain.simulator.GetElectrodes() {
-					fmt.Printf("\r %f", v.Read())
+					fmt.Printf("\t%2.2f", v.Read())
 				}
 			case <-quit:
 				ticker.Stop()

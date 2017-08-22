@@ -107,7 +107,7 @@ AddEdge adds the edge to the pool and returns the edge index.
 */
 func (nsim *LocalNeuronPoolSimulator) AddEdge(e Edge) int {
 	nsim.edges = append(nsim.edges, e)
-	// fmt.Println(len(nsim.edges))
+	nsim.GetNeuron(e.GetFrom()[0]).GetSegment(e.GetFrom()[1]).AddDownstreamEdge(&e)
 	return len(nsim.edges)
 }
 

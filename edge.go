@@ -11,6 +11,8 @@ type Edge interface {
 	// // Unused:
 	// lambda float64
 	// tau    float64
+	GetFrom() [2]string
+	GetTo() [2]string
 }
 
 /*
@@ -18,4 +20,12 @@ A SimpleEdge represents the simplest edge (a zero-time synapse.
 */
 type SimpleEdge struct {
 	from, to [2]string
+}
+
+func (e *SimpleEdge) GetFrom() [2]string {
+	return e.from
+}
+
+func (e *SimpleEdge) GetTo() [2]string {
+	return e.to
 }

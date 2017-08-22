@@ -11,23 +11,24 @@ func main() {
 	b.AddNeuron("AAAA", NewIAFNeuron())
 	b.AddNeuron("AAAB", NewIAFNeuron())
 	b.AddNeuron("AAAC", NewIAFNeuron())
-	b.AddEdge(SimpleEdge{
+	b.AddEdge(&SimpleEdge{
 		from: [2]string{"AAAA", "soma"},
 		to:   [2]string{"AAAB", "soma"},
 		// latency: 1,
 	})
-	b.AddEdge(SimpleEdge{
+	b.AddEdge(&SimpleEdge{
 		from: [2]string{"AAAB", "soma"},
 		to:   [2]string{"AAAC", "soma"},
 		// latency: 5,
 	})
-	b.AddEdge(SimpleEdge{
+	b.AddEdge(&SimpleEdge{
 		from: [2]string{"AAAC", "soma"},
 		to:   [2]string{"AAAA", "soma"},
 		// latency: 2,
 	})
 
-	e := b.InsertElectrode("AAAA", "soma")
+	e1 := b.InsertElectrode("AAAA", "soma")
+	_ = b.InsertElectrode("AAAB", "soma")
 
 	ticker := time.NewTicker(5 * time.Second)
 	quit := make(chan struct{})
@@ -35,7 +36,7 @@ func main() {
 		for {
 			select {
 			case <-ticker.C:
-				e.PinVoltage(10, 10)
+				e1.PinVoltage(10, 10)
 
 			case <-quit:
 				ticker.Stop()
