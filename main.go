@@ -1,6 +1,9 @@
 package main
 
-import "time"
+import (
+	"fmt"
+	"time"
+)
 
 func main() {
 	// Create a new Brain and set its simulator:
@@ -8,29 +11,26 @@ func main() {
 		simulator: NewLocalNeuronPoolSimulator(),
 	}
 
-	b.AddNeuron("AAAA", NewIAFNeuron())
-	b.AddNeuron("AAAB", NewIAFNeuron())
-	b.AddNeuron("AAAC", NewIAFNeuron())
-	b.AddEdge(&SimpleEdge{
-		from: [2]string{"AAAA", "soma"},
-		to:   [2]string{"AAAB", "soma"},
-		// latency: 1,
-	})
-	b.AddEdge(&SimpleEdge{
-		from: [2]string{"AAAB", "soma"},
-		to:   [2]string{"AAAC", "soma"},
-		// latency: 5,
-	})
-	b.AddEdge(&SimpleEdge{
-		from: [2]string{"AAAC", "soma"},
-		to:   [2]string{"AAAA", "soma"},
-		// latency: 2,
-	})
+	popn := int(1e2)
+	for i := 0; i < popn; i++ {
+		b.AddNeuron(fmt.Sprintf("%d", i), NewIAFNeuron())
+	}
 
-	e1 := b.InsertElectrode("AAAA", "soma")
-	_ = b.InsertElectrode("AAAB", "soma")
+	for i := 0; i < popn; i++ {
+		for j := 0; j < popn; j++ {
+			if i != j {
+				b.AddEdge(&SimpleEdge{
+					from: [2]string{fmt.Sprintf("%d", i), "soma"},
+					to:   [2]string{fmt.Sprintf("%d", j), "soma"},
+				})
+			}
+		}
+	}
 
-	ticker := time.NewTicker(5 * time.Second)
+	e1 := b.InsertElectrode("0", "soma")
+	_ = b.InsertElectrode("50", "soma")
+
+	ticker := time.NewTicker(4 * time.Second)
 	quit := make(chan struct{})
 	go func() {
 		for {

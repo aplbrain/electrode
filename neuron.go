@@ -101,7 +101,7 @@ Step through a single timepoint.
 */
 func (neuron *IAFNeuron) Step() {
 	for sname, seg := range neuron.segments {
-		print(seg.GetDownstreamEdges()[0].GetFrom()[0])
+		// print(seg.GetDownstreamEdges()[0].GetFrom()[0])
 
 		seg.SetMembranePotential(seg.GetMembranePotential() * 0.9)
 		// TODO: Propagate membrane potential to neighbors
