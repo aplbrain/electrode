@@ -65,13 +65,13 @@ class Brain:
         self._graph = nx.Graph()
         if reduce:
             self._graph = nx.compose_all([
-                neuron for neuron in self._neurons
+                neuron.reduce() for neuron in self._neurons
             ])
 
             for synapse in self._synapses:
                 self._graph.add_edge(
-                    synapse[0],
-                    synapse[1],
+                    "/".join(synapse[0]),
+                    "/".join(synapse[1]),
                     synapse[2]
                 )
 
@@ -130,6 +130,5 @@ class Brain:
 
         """
         self._synapses.append(
-            source, sink, synapse
+            (source, sink, synapse)
         )
-        raise NotImplementedError()
