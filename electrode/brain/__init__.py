@@ -5,11 +5,12 @@ Brain module.
 The master file for the simulator.
 """
 
-from typing import List
+from typing import Tuple
 import networkx as nx
 
 from .. import timing
 from ..neuron import Neuron
+from ..synapse import Synapse
 
 
 class Brain:
@@ -32,6 +33,8 @@ class Brain:
         self.time_resolution = kwargs.get('time_resolution', timing.ms(0.5))
         self._graph = nx.Graph()
         self.loaded = False
+        self._neurons = []  # type: List[Neuron]
+        self._synapses = []  # type: List[Synapse]
 
     def __getitem__(self, key):
         """
@@ -46,7 +49,7 @@ class Brain:
         """
         raise NotImplementedError()
 
-    def load(self, reduce: bool = True):
+    def compile(self, reduce: bool = True):
         """
         Simplify the graph and load it into the networkx graph.
 
@@ -59,10 +62,18 @@ class Brain:
 
         """
         self.loaded = True
+        self._graph = nx.Graph()
         if reduce:
-            # TODO: Reduce network.
-            pass
-        # raise NotImplementedError()
+            self._graph = nx.compose_all([
+                neuron for neuron in self._neurons
+            ])
+
+            for synapse in self._synapses:
+                self._graph.add_edge(
+                    synapse[0],
+                    synapse[1],
+                    synapse[2]
+                )
 
     def run(self) -> bool:
         """
@@ -83,7 +94,7 @@ class Brain:
         """
         Add a new neuron to the network. Adds resultant connections.
 
-        Cannot be run after a call to .load().
+        Cannot be run after a call to .compile().
 
         Arguments:
             neuron (electrode.Neuron): The neuron to add.
@@ -96,13 +107,15 @@ class Brain:
             raise TypeError("Neuron must implement electrode.neuron.Neuron.")
         if self.loaded:
             raise RuntimeError(
-                "You cannot call `add_neuron` after a call to `load`."
+                "You cannot call `add_neuron` after a call to `compile`."
             )
+        self._neurons.append(neuron)
 
     def add_synapse(
-            self, synapse,
-            source: List[str],
-            sink: List[str]
+            self,
+            synapse: Synapse,
+            source: Tuple[str, str],
+            sink: Tuple[str, str]
     ):
         """
         Add a new synapse to the network.
@@ -116,4 +129,7 @@ class Brain:
             None
 
         """
+        self._synapses.append(
+            source, sink, synapse
+        )
         raise NotImplementedError()

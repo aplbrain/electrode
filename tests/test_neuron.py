@@ -9,9 +9,9 @@ class TestNeuron(unittest.TestCase):
 
     def test_str_hh_neuron(self):
         """
-        Test that you cannot call `add_neuron` after `load`.
+        Test neuron naming.
 
-        This should throw a runtime exception.
+        This should return a repr-able string.
         """
         nrn = HodgkinHuxleyNeuron(name="test")
         self.assertEqual(
@@ -31,4 +31,8 @@ class TestNeuron(unittest.TestCase):
         self.assertEqual(
             nrn.reduce().nodes(),
             ["test/soma"]
+        )
+        self.assertEqual(
+            len(nrn.reduce().nodes()),
+            1
         )

@@ -15,6 +15,7 @@ class TestBrain(unittest.TestCase):
         This should throw a runtime exception.
         """
         brain = Brain()
-        brain.load()
+        brain.add_neuron(Neuron())
+        brain.compile()
         with self.assertRaises(RuntimeError):
             brain.add_neuron(Neuron())

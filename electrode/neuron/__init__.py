@@ -8,8 +8,8 @@ You can implement Neuron to generate your own simulation type.
 from abc import ABCMeta, abstractmethod
 import typing
 
-import networkx as nx
 import uuid
+import networkx as nx
 
 
 class Neuron:
@@ -54,7 +54,7 @@ class HodgkinHuxleyNeuron(Neuron):
             name: str = None,
             resting_potential: float = -75,
             threshold_potential: float = -53
-    ):
+    ) -> None:
         """
         Create a new Hodgkin-Huxley model point-neuron.
 
@@ -66,7 +66,7 @@ class HodgkinHuxleyNeuron(Neuron):
         if name:
             self.name = name
         else:
-            self.name = uuid.uuid4()
+            self.name = str(uuid.uuid4())
 
         self.resting_potential = resting_potential
         self.threshold_potential = threshold_potential

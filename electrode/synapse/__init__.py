@@ -37,7 +37,7 @@ class SimpleSynapse(Synapse):
 
     """
 
-    def __init__(self, postsynaptic_weight: float):
+    def __init__(self, postsynaptic_weight: float) -> None:
         """
         Create a new simple synapse.
 
