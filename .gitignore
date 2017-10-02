@@ -51,3 +51,4 @@ docs/_build/
 
 
 .mypy_cache/
+.DS_Store
