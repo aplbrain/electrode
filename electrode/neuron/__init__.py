@@ -126,7 +126,7 @@ class HodgkinHuxleyNeuron(Neuron):
             networkx.Graph
 
         """
-        g = nx.Graph()
+        g = nx.DiGraph()
         g.add_node("{}/soma".format(self.name), {
             "mV": self.resting_potential,
             "resting": self.resting_potential,

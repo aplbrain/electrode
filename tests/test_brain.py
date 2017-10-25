@@ -49,9 +49,9 @@ class TestBrain(unittest.TestCase):
         """
         brain = Brain()
         brain.add_neuron(HodgkinHuxleyNeuron(name="1"))
-        brain.add_neuron(HodgkinHuxleyNeuron(name="2"))
         brain.compile()
         self.assertEqual(type(brain["1", "soma"]), dict)
+        self.assertEqual(type(brain["1/soma"]), dict)
 
     def test_10x10_brain(self):
         """
@@ -73,7 +73,7 @@ class TestBrain(unittest.TestCase):
         brain.compile()
 
         self.assertEqual(len(brain.get_graph().nodes()), 10)
-        self.assertEqual(len(brain.get_graph().edges()), 55)
+        self.assertEqual(len(brain.get_graph().edges()), 100)
 
     def test_mV_decay(self):
         """
@@ -95,3 +95,25 @@ class TestBrain(unittest.TestCase):
         self.assertEqual(brain["1", "soma"]['mV'], -20)
         brain.step()
         self.assertNotEqual(brain["1", "soma"]['mV'], -20)
+
+    def test_mV_decay_long(self):
+        """
+        Test that membrane potential goes down over time.
+
+        .
+        """
+        brain = Brain()
+        brain.add_neuron(HodgkinHuxleyNeuron(name="1"))
+        brain.add_neuron(HodgkinHuxleyNeuron(name="2"))
+        brain.add_synapse(
+            SimpleSynapse(1.),
+            ("1", "soma"),
+            ("2", "soma")
+        )
+        brain.compile()
+
+        brain['1', 'soma']['mV'] = -20
+        self.assertEqual(brain["1", "soma"]['mV'], -20)
+        for i in range(50):
+            brain.step()
+        self.assertAlmostEqual(brain["1", "soma"]['mV'], -75)

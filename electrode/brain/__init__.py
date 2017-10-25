@@ -7,6 +7,7 @@ The master file for the simulator.
 
 from typing import Tuple
 import networkx as nx
+import numpy as np
 
 from .. import timing
 from ..neuron import Neuron
@@ -31,7 +32,7 @@ class Brain:
         # Set defaults.
         # Time resolution is 0.5 millis
         self.time_resolution = kwargs.get('time_resolution', timing.ms(0.5))
-        self._graph = nx.Graph()
+        self._graph = nx.DiGraph()
         self.loaded = False
         self._neurons = []  # type: List[Neuron]
         self._synapses = []  # type: List[Synapse]
@@ -47,7 +48,9 @@ class Brain:
             Segment
 
         """
-        return self._graph.node["{}/{}".format(*key)]
+        if len(key) is 2:
+            return self._graph.node["{}/{}".format(*key)]
+        return self._graph.node[key]
 
     def get_graph(self) -> nx.Graph:
         """
@@ -80,7 +83,7 @@ class Brain:
 
         """
         self.loaded = True
-        self._graph = nx.Graph()
+        self._graph = nx.DiGraph()
         if reduce:
             self._graph = nx.compose_all([
                 neuron.reduce() for neuron in self._neurons
@@ -109,15 +112,22 @@ class Brain:
         for node_id, attrs in self._graph.nodes_iter(True):
             # TODO: This needs to be smarter.
             attrs['mV'] = (
-                (attrs['mV'] - attrs['resting']) * 0.99
+                (attrs['mV'] - attrs['resting']) * 0.62
             ) + attrs['resting']
 
             # TODO:
             # For each neighbor of node:
             #       If the edge is continuous, "equalize" mV
             #       If the edge is a synapse, "fire" if the mV is high enough
-            for edge in self._graph.edges(node_id, data=True):
-                print(edge)
+            for (seg0, seg1, link) in self._graph.edges([node_id], data=True):
+                if 'synapse' in link:
+                    if self[seg0]['mV'] >= self[seg0]['threshold']:
+                        # TODO: this is not mean!
+                        self[seg1]['mV'] = np.mean([self[seg1]['mV'], attrs['mV']])
+                else:
+                    raise NotImplementedError(
+                        "Cannot support multicompartment yet."
+                    )
         return True
 
     def add_neuron(self, neuron):
