@@ -38,6 +38,22 @@ class Neuron:
         """
         pass
 
+    @abstractmethod
+    def reduce(self) -> nx.Graph:
+        """
+        Reduce the neuron to a graph representation.
+
+        The simple point-model neurons all reduce to a single node, "soma".
+
+        Arguments:
+            None
+
+        Returns:
+            networkx.Graph
+
+        """
+        pass
+
 
 class HodgkinHuxleyNeuron(Neuron):
     """
@@ -111,5 +127,9 @@ class HodgkinHuxleyNeuron(Neuron):
 
         """
         g = nx.Graph()
-        g.add_node("{}/soma".format(self.name))
+        g.add_node("{}/soma".format(self.name), {
+            "mV": self.resting_potential,
+            "resting": self.resting_potential,
+            "threshold": self.threshold_potential,
+        })
         return g

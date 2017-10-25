@@ -47,7 +47,25 @@ class Brain:
             Segment
 
         """
-        raise NotImplementedError()
+        return self._graph.node["{}/{}".format(*key)]
+
+    def get_graph(self) -> nx.Graph:
+        """
+        Get the underlying networkx graph when compiled.
+
+        Arguments:
+            None
+
+        Returns:
+            networkx.Graph: The underlying compiled graph
+
+        """
+        if self.loaded:
+            return self._graph
+
+        raise RuntimeError(
+            "Cannot retrieve a graph until you have called Brain#compile."
+        )
 
     def compile(self, reduce: bool = True):
         """
@@ -72,10 +90,10 @@ class Brain:
                 self._graph.add_edge(
                     "/".join(synapse[0]),
                     "/".join(synapse[1]),
-                    synapse[2]
+                    {'synapse': synapse[2]}
                 )
 
-    def run(self) -> bool:
+    def step(self) -> bool:
         """
         Begin running the simulation.
 
@@ -88,7 +106,19 @@ class Brain:
             bool: True when successful, False otherwise.
 
         """
-        raise NotImplementedError()
+        for node_id, attrs in self._graph.nodes_iter(True):
+            # TODO: This needs to be smarter.
+            attrs['mV'] = (
+                (attrs['mV'] - attrs['resting']) * 0.99
+            ) + attrs['resting']
+
+            # TODO:
+            # For each neighbor of node:
+            #       If the edge is continuous, "equalize" mV
+            #       If the edge is a synapse, "fire" if the mV is high enough
+            for edge in self._graph.edges(node_id, data=True):
+                print(edge)
+        return True
 
     def add_neuron(self, neuron):
         """
