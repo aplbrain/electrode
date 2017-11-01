@@ -1,3 +1,7 @@
-# electrode
+<center>
+<img src="./electrode.png" />
+<h1>electrode</h1>
+<span>Multitier Neural Simulator</span>
+</center>
 
-Tiered neural simulation framework
+Jordan Matelsky 2017
