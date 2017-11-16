@@ -114,6 +114,6 @@ class TestBrain(unittest.TestCase):
 
         brain['1', 'soma']['mV'] = -20
         self.assertEqual(brain["1", "soma"]['mV'], -20)
-        for i in range(50):
+        for _ in range(50):
             brain.step()
         self.assertAlmostEqual(brain["1", "soma"]['mV'], -75)
