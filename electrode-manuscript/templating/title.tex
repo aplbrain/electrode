@@ -1,0 +1,59 @@
+\usepackage{titling}
+\usepackage{graphicx}
+
+
+\graphicspath{ {templating/} }
+
+\newcommand{\HR}[1]{\color{ISCDarkGray}\rule{\linewidth}{#1}}
+\newcommand{\HRColor}[2]{\color{#2}\rule{\linewidth}{#1}}
+
+\pretitle{
+    \clearpage\thispagestyle{empty}
+    \vspace{-95pt}
+    \begin{flushright}
+        \klavika{Johns Hopkins University\\Whiting School of Engineering}\\
+        \vspace{5pt}
+    \end{flushright}
+    \HRColor{18pt}{JHUSteelBlue}
+    \fontsize{26}{28}\klavika
+    \color{black}
+}
+
+\posttitle{
+\par\vskip 15pt
+}
+
+\preauthor{
+}
+
+\postauthor{
+}
+
+\predate{
+    \\\\
+    \footnotesize\usefont{OT1}{phv}{m}{n}\bfseries
+}
+
+\postdate{
+    \par\HR{2pt}
+    \vspace{10pt}
+}
+
+\newcommand{\authorstyle}[1]{{\large\usefont{OT1}{phv}{b}{n}\color{black}#1}}
+\newcommand{\institution}[1]{{\footnotesize\usefont{OT1}{phv}{m}{n}\color{black}#1}}
+
+
+
+\titleformat{\section}
+    {\klavika\Large\color{JHUSteelBlue}}
+    {\thesection}{1em}{}
+
+
+\titleformat{\subsection}
+    {\klavika\large\color{JHUSteelBlue}}
+    {\thesubsection}{1em}{}
+
+
+\titleformat{\subsubsection}
+    {\klavika\color{JHUSteelBlue}}
+    {\thesubsubsection}{1em}{}

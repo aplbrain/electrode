@@ -1,0 +1,111 @@
+\documentclass[letter, twocolumn]{article}
+
+%% Language and font encodings
+\usepackage[english]{babel}
+\usepackage[utf8x]{inputenc}
+\usepackage[T1]{fontenc}
+
+%% Sets page size and margins
+\usepackage[top=2cm,bottom=2cm,left=2.5cm,right=2.5cm,marginparwidth=1.75cm]{geometry}
+
+%% Useful packages
+\usepackage{enumitem}
+\usepackage{amsmath}
+\usepackage{graphicx}
+\usepackage{listings}
+\usepackage{wrapfig}
+\usepackage{placeins}
+\usepackage[colorlinks=true, allcolors=blue]{hyperref}
+\usepackage[font=small,labelfont=bf]{caption}
+
+\usepackage{color}
+
+\input{templating/code.tex}
+\input{templating/fonts.tex}
+\input{templating/title.tex}
+\input{templating/colors.tex}
+
+
+\title{Simulating biofidelic neural networks on consumer hardware with \textit{Electrode}}
+\author{
+	Jordan Matelsky,
+    Will Gray Roncal \\ \\
+    \institution{
+    	Johns Hopkins University; Baltimore, Maryland \\
+    Correspondence: jordan.matelsky@jhu.edu
+    }
+}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+Artificial neural networks, based loosely on the concept of cooperating populations of neurons in a biological brain, are used in countless new fields, enabling technologies such as automated navigation, robotic locomotion, and object recognition or classification. These computational systems suffer from a variety of shortcomings that make them poor candidates for lower-resource computational environments, and they are useless as a model for biological processes. We present \textit{electrode}, a biological neuron simulation framework. Taking cues from cousin simulator projects such as SpiNNaker, \textit{electrode} represents neurons as imperfect biological entities. But unlike other systems in this space, \textit{electrode} does not require specialized hardware, and can run on any device, from supercomputer to cellphone. We aim to make biological neural networks accessible for study or application to users at all levels of expertise, for all levels of computational resource availability.
+\end{abstract}
+
+
+\section{Introduction}
+In recent years, artificial neural networks have seen use in countless novel and groundbreaking applications such as object recognition, video synthesis, audio generation, driverless car navigation, and more. These complex systems simulate aspects of biological neural networks in order to approximate very complex --- sometimes even completely unknown --- functions. Despite their power, however, artifical neural networks (ANNs) still suffer from a number of shortcomings when compared with biological systems, including very high power and computational resource requirements, as well as poor realtime model adaptability.
+
+Biological neural networks (BNNs), while imperfect, act as an existance-proof for highly efficient, highly generalizable, plastic learning networks. While systems exist to simulate biological neurons, they are generally designed with power optimization in mind, which necessitates specialized, proprietary hardware --- or else they are designed for scientific study of so-called `in-silico' study, and the systems are not adequate for use in common real-word ANN applications.
+
+We aim to develop a system that bridges this gap and provides both a powerful subsrate for biological simulation and experimentation as well as a potent, efficient alternative to conventional ANNs. In other words, while discrete, node-based neural networks are neurally inspired, we aim to present a neurally \textit{plausible} simulator framework.
+
+\section{Prior Work}
+We are aware of two distinct classes of neuron simulation frameworks: the \textit{biological study} simulations, and the \textit{specialized hardware} systems. The former are designed to enable neuroscientific study at the expense of efficient code design and execution. The latter are designed to minimize power and computation resource requirements, at the expense of financial cost and hardware availability.
+
+\subsection{Biological Neural Network Simulators}
+DIPDE is an example of one such simulator that aims to simulate neural networks for biological study. While DIPDE, designed by the Allen Brain Institute, is biofidelic, it does not present a way to integrate the neural network simulation with inputs, outputs, and other controls external to the simulator. Instead, it allows monitoring of the system only \cite{DIPDE}.
+
+\subsection{Specialized-Hardware Simulators}
+SpiNNaker and TrueNorth are examples of simulators that use specialized hardware \cite{SpiNNaker, truenorth}. These technologies are exciting both in their speed and in their attention to neuro-feasible details. However, rearchitecting these systems is difficult and involves hardware reconstruction. The specialized hardware itself is expensive and difficult to manufacture outside of purpose-built facilities, making the barrier to entry for use prohibitively high for most researchers.
+
+\section{Architecture}
+\textit{Electrode} is highly modular: A simulation is comprised of a set of neuron objects, synapse objects, and electrodes. Neurons conduct membrane potential changes across space, and synapses transmit spiking behavior between neurons.
+
+\subsection{Neurons}
+\textit{Electrode} simulates neurons using an abstract \textit{Neuron} class that can be either implemented using the pre-built implementations packaged wth \textit{Electrode}, or by custom implementation for custom purposes. For example, representing a simple spiking single-compartment neuron can be done using the built-in Leaky Integrate and Fire type, \texttt{LIAFNeuron} \cite{LIAF}, and simulating a long axon can be done with the built in multicompartment \texttt{SWCNeuron} which uses the SWC DAG-like data format to represent a single neuron \cite{SWC}. Alternatively, a retina researcher may choose to hand-design a photoreceptor \texttt{Neuron} implementation to behave appropriately for the use-case.
+
+\subsection{Synapses}
+Because there are many types of biological synapses, each with their own specific response timing and vesicle fusing patterns, \textit{Electrode} provides an abstract \textit{Synapse} class, much like the abstract \textit{Neuron} class. Brain developers can use prebuilt simple models of synapses, or hand-implement a custom one from scratch. For convenience, \textit{Electrode} includes a \textit{SimpleSynapse} implementation, which can be used to connect neurons in a simple model of a network. This implementation is unopinionated about neurotransmitter and is likely a bad choice for biofidelic simulations \cite{synweight}.
+
+\subsection{Electrodes}
+Just like their physical counterparts, the eponymous \textit{Electrode}s are core to the simulator's architecture. \textit{Electrode} objects can be inserted anywhere in a model --- within a synapse or inside a particular compartment of a neuron --- and can be used to either stimulate (set a membrane potential) or read (record a membrane potential). These interactions are made out-of-sync with the rest of the simulator's event loop, which means that reads are non-blocking, just like an ideal physical electrode study. This is important because this package can be easily integrated with other technologies such as hardware or machine learning applications where the stimuli do not exist in the same Python memory space as the core simulation.
+
+These electrodes are the interface to this simulation: While the rest of the package could be considered a black box, the electrodes act as inputs and outputs to the system. Currently, these electrodes are only accessible via the Python API, but we aim to extend this to a socket-based system so that interaction is possible from other programming or analysis platforms such as ROS \cite{ROS}.
+
+\subsection{Compiling a Brain: Network Simplification}
+One of the greatest computational challenges of running biofidelic simulations of neural interactions is keeping track of large numbers of compartments in multicompartment neurons. In order to lower the onus on the developer to optimize the brain under inspection, \textit{Electrode} includes a brain simplification and compilation system that reduces the computational overhead of simulation. This is done by replacing complex structures with simpler ones that exhibit the same external properties. For example, a neuron with no synapses and no electrodes placed along its membrane can be entirely removed from the simulation with no effect to the outcome of other neurons. In other cases, long stretches of neurite without any branches can be simplified to a single compartment, where the time-latency of signal transmission from one side to the other is the same as that of the longer, multicompartment segment.
+
+This simplifiability is a property of the simplified equations for $\lambda$ and $\tau$, the length- and time-constants that describe the behavior of an action potential along a segment of membrane.
+
+This is a function of the underlying equations which dictate the speed and distance of transmission: Namely, because these equations describe an accumulation function, we can rely on the \textit{fundamental theorem of calculus} to demonstrate that for two segments $AB$ and $BC$,
+
+$$\int_a^c f(x)dx = \int_a^b f(x)dx + \int_b^c f(x)dx $$
+
+Therefore, because (according to neuroscience ``Cable Theory'') \cite{cableTheory},
+
+$$\tau \frac{\delta V}{\delta t} = \lambda^2 \frac{\delta^2 V}{\delta x^2} - V$$
+
+we can demonstrate that
+
+$$ \Delta f(\lambda_{ab}, \lambda_{bc}) = \Delta f(\lambda_{ac})$$
+
+but I do not here, because the calculus is extremely unpleasant, in addition to including variables that I do not know how to type in \LaTeX.
+
+This protocol can of course be disabled in cases where experimenters wish for the full complexity to be represented during simulation.
+
+\section{Discussion}
+We anticipate many uses for the \textit{Electrode} neural network simulation framework. We expect neuron-like interaction with robotics --- that is, playing the role of a biological brain for a man-made robot --- to be among the most exciting. By mutating the simulated brain using genetic algorithms (GA), it will be possible to optimize a brain graph for particular optimization functions. For instance, by opitimizing for certain actions that induce light-seeking behavior in a photocell-equipped robot, it will be possible to generate a ``brain'' that seeks light environments \cite{celegansLight}. These patterns in organization can then be examined for similarity to endogenous motifs found in nature.
+
+We also hope to enable biological, systems-level connectomics study by simulating neural structures such as trusses or claw-graphs. These commonly-found structures are difficult to study in isolation \textit{in vivo}, but with \textit{Electrode} we hope that these studies can be carried out \textit{in silico} first to establish expectations and intuitions.
+
+
+\section{Further Work}
+One interesting avenue of research is finding compatibility between BNNs and ANNs. Currently, the continuous-value neurons of an ANN are incompatible with the discrete, binary functions of BNNs. Two approaches seem like feasible next-steps for establishing synergies between these systems: (1) Generating a go-between `neuron' that accepts discrete-value inputs and returns an ANN-compatible tensor, or vice-versa; or (2) establishing microstructures of ANN neurons that simulate discrete values, or BNNs that virtualize continuous values. For example, a cluster of $n$ discrete-value binary-response neurons could additively represent the interval [0..1] by each contributing $1/n$ to a summation layer. In this way, a resolution of $n$ (instead of binary 2) can be described over the interval.
+
+We also aim to further implement common neuron and synapse types for easy use by the neurosimulation community. We expect NeuroML and NWB formats to be likely next candidates for implementation.
+
+\bibliographystyle{IEEEtran}
+\bibliography{electrode.bib}
+\end{document}
