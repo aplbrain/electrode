@@ -66,16 +66,18 @@ class HodgkinHuxleyNeuron(Neuron):
     """
 
     def __init__(
-            self,
-            name: str = None,
-            resting_potential: float = -75,
-            threshold_potential: float = -53
+        self,
+        name: str = None,
+        resting_potential: float = -75,
+        fire_potential: float = 40,
+        threshold_potential: float = -53,
     ) -> None:
         """
         Create a new Hodgkin-Huxley model point-neuron.
 
         Accepts as arguments:
             resting_potential (int : -75): Resting potential of the cell
+            fire_potential (int : -75): AP_max of the cell
             threshold_potential (int : -75): Threshold for activation
 
         """
@@ -85,6 +87,7 @@ class HodgkinHuxleyNeuron(Neuron):
             self.name = str(uuid.uuid4())
 
         self.resting_potential = resting_potential
+        self.fire_potential = fire_potential
         self.threshold_potential = threshold_potential
 
     def frame(self):
@@ -102,15 +105,15 @@ class HodgkinHuxleyNeuron(Neuron):
         Simple enough to repro a neuron in simple cases.
         """
         return (
-            (
-                "HodgkinHuxley(name='{}', " +
-                "resting_potential={}, " +
-                "threshold_potential={})"
-            ).format(
-                self.name,
-                self.resting_potential,
-                self.threshold_potential
-            )
+            "HodgkinHuxley(name='{}', "
+            + "resting_potential={}, "
+            + "fire_potential={}, "
+            + "threshold_potential={})"
+        ).format(
+            self.name,
+            self.resting_potential,
+            self.fire_potential,
+            self.threshold_potential,
         )
 
     def reduce(self) -> nx.Graph:
@@ -127,9 +130,13 @@ class HodgkinHuxleyNeuron(Neuron):
 
         """
         g = nx.DiGraph()
-        g.add_node("{}/soma".format(self.name), {
-            "mV": self.resting_potential,
-            "resting": self.resting_potential,
-            "threshold": self.threshold_potential,
-        })
+        g.add_node(
+            "{}/soma".format(self.name),
+            **{
+                "mV": self.resting_potential,
+                "resting": self.resting_potential,
+                "threshold": self.threshold_potential,
+                "fire_potential": self.fire_potential,
+            }
+        )
         return g

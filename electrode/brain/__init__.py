@@ -14,6 +14,17 @@ from ..neuron import Neuron
 from ..synapse import Synapse
 
 
+class Electrode:
+    def __init__(self, compartment):
+        self.compartment = compartment
+
+    def record(self):
+        return self.compartment["mV"]
+
+    def stim(self, current: float = 0):
+        self.compartment["mV"] = current
+
+
 class Brain:
     """
     Brains handle simulator-pools.
@@ -31,7 +42,7 @@ class Brain:
         """
         # Set defaults.
         # Time resolution is 0.5 millis
-        self.time_resolution = kwargs.get('time_resolution', timing.ms(0.5))
+        self.time_resolution = kwargs.get("time_resolution", timing.ms(0.5))
         self._graph = nx.DiGraph()
         self.loaded = False
         self._neurons = []  # type: List[Neuron]
@@ -49,8 +60,8 @@ class Brain:
 
         """
         if len(key) is 2:
-            return self._graph.node["{}/{}".format(*key)]
-        return self._graph.node[key]
+            return self._graph.nodes["{}/{}".format(*key)]
+        return self._graph.nodes[key]
 
     def get_graph(self) -> nx.Graph:
         """
@@ -85,15 +96,13 @@ class Brain:
         self.loaded = True
         self._graph = nx.DiGraph()
         if reduce:
-            self._graph = nx.compose_all([
-                neuron.reduce() for neuron in self._neurons
-            ])
+            self._graph = nx.compose_all([neuron.reduce() for neuron in self._neurons])
 
             for synapse in self._synapses:
                 self._graph.add_edge(
                     "/".join(synapse[0]),
                     "/".join(synapse[1]),
-                    {'synapse': synapse[2]}
+                    **{"synapse": synapse[2]}
                 )
 
     def step(self) -> bool:
@@ -109,25 +118,30 @@ class Brain:
             bool: True when successful, False otherwise.
 
         """
-        for node_id, attrs in self._graph.nodes_iter(True):
-            # TODO: This needs to be smarter.
-            attrs['mV'] = (
-                (attrs['mV'] - attrs['resting']) * 0.62
-            ) + attrs['resting']
+        _EPSILON = 2.0  # mV
 
-            # TODO:
+        for node_id, attrs in self._graph.nodes(data=True):
+            attrs["mV"] = ((attrs["mV"] - attrs["resting"]) * 0.62) + attrs["resting"]
+
+            if attrs["mV"] >= attrs["threshold"]:
+                attrs["mV"] = attrs["fire_potential"]
+
+        for node_id, attrs in self._graph.nodes(data=True):
             # For each neighbor of node:
             #       If the edge is continuous, "equalize" mV
             #       If the edge is a synapse, "fire" if the mV is high enough
             for (seg0, seg1, link) in self._graph.edges([node_id], data=True):
-                if 'synapse' in link:
-                    if self[seg0]['mV'] >= self[seg0]['threshold']:
-                        # TODO: this is not mean!
-                        self[seg1]['mV'] = np.mean([self[seg1]['mV'], attrs['mV']])
+                if "synapse" in link:
+                    if self[seg0]["mV"] >= self[seg0]["fire_potential"] - _EPSILON:
+                        self[seg1]["mV"] = min(
+                            link["synapse"].postsynaptic_weight
+                            * (self.time_resolution),
+                            self[seg1]["threshold"],
+                        )
                 else:
-                    raise NotImplementedError(
-                        "Cannot support multicompartment yet."
-                    )
+                    raise NotImplementedError("Cannot support multicompartment yet.")
+            if attrs["mV"] >= attrs["fire_potential"]:
+                attrs["mV"] = attrs["resting"] - _EPSILON
         return True
 
     def add_neuron(self, neuron):
@@ -151,11 +165,11 @@ class Brain:
             )
         self._neurons.append(neuron)
 
+    def add_electrode(self, location) -> Electrode:
+        return Electrode(self[location])
+
     def add_synapse(
-            self,
-            synapse: Synapse,
-            source: Tuple[str, str],
-            sink: Tuple[str, str]
+        self, synapse: Synapse, source: Tuple[str, str], sink: Tuple[str, str]
     ):
         """
         Add a new synapse to the network.
@@ -169,6 +183,4 @@ class Brain:
             None
 
         """
-        self._synapses.append(
-            (source, sink, synapse)
-        )
+        self._synapses.append((source, sink, synapse))
