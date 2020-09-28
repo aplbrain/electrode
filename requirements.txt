@@ -1,1 +1,2 @@
-networkx
+networkx==2.4
+brian2

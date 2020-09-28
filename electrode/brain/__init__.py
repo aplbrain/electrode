@@ -1,18 +1,119 @@
 #!/usr/bin/env python3
 """
 Brain module.
-
 The master file for the simulator.
 """
 
+#for electrode
 from typing import Tuple
-import networkx as nx
+import networkx as nx #2.4
 import numpy as np
+import os
 
 from .. import timing
 from ..neuron import Neuron
 from ..synapse import Synapse
 
+#for brian2
+from brian2 import * 
+
+#####Brian 2
+
+class Brian2_Brain:
+    def __init__(self, **kwargs):
+        '''
+        Create a new brain. 
+
+        '''
+        self._neuron_groups = {}
+        self._synapses = {}
+        self._neuronmonitors = {}
+        self._synapsemonitors ={}
+        self._spikemonitors = {}
+  
+    def add_group_of_neurons(self, node_list, group_name, neuronmodel):
+        """
+        Creates a brian2 neuron group for a group of neurons. 
+        
+        Arguments:
+            neuron (electrode.NeuronModel): The neuronmodel to add.
+        Returns:
+            None
+        """
+    
+       
+        self._neuron_groups[group_name] = neuronmodel
+        self._neuronmonitors[group_name], self._spikemonitors[group_name] =  self._neuron_groups[group_name].setUpMonitors()
+        
+        
+    def add_single_neuron(self, node_name, neuronmodel):
+        """
+        Creates a brian2 neuron group for a single new neuron. 
+        
+        Arguments:
+            node_name
+            neuron (electrode.NeuronModel): The neuronmodel to add.
+        Returns:
+            None
+        """
+    
+       
+        self._neuron_groups[node_name] = neuronmodel
+        self._neuronmonitors[node_name], self._spikemonitors[node_name] =  self._neuron_groups[node_name].setUpMonitors()
+        
+
+
+    def add_synapses(self, synapse_group_name, source_ng, target_ng, edges, model, on_pre, **kwargs):
+        
+        ## todo pass kwargs to Synapses
+        '''
+        Creates synapses. 
+        
+        Parameters
+        ----------
+        
+        network: network class
+        edges: (source, target, weight)
+        model:
+        onpre:
+        **kwargs : 
+            delay: 
+
+        Returns
+        -------
+        None.
+
+        '''
+        self._synapses[synapse_group_name] = Synapses(source_ng.neuron_group, target_ng.neuron_group, model, on_pre, name='synapses*')
+        
+        for (u, v, c) in edges:
+            i = source_ng.name_index[u]
+            j = target_ng.name_index[v]
+            self._synapses[synapse_group_name].connect(i=i,j=j)
+            self._synapses[synapse_group_name].w[i, j] = float(c)
+        
+        if 'delay' in kwargs:
+            self._synapses[synapse_group_name].delay = kwargs['delay']
+        self._synapsemonitors[synapse_group_name] = StateMonitor(self._synapses[synapse_group_name], 'v', record=True)
+        
+         
+
+    def run_simulation(self, time):
+        
+       if hasattr(self, 'sim_network') == False:
+           self.sim_network = Network()
+           for n in self._neuron_groups.values():
+               self.sim_network.add(n.neuron_group)
+               
+           self.sim_network.add(self._synapses.values(),  self._neuronmonitors.values(), self._synapsemonitors.values(), 
+                                      self._spikemonitors.values() )
+           self.sim_network.store()
+       self.sim_network.run(time*ms)
+       
+    def reset_stimulation(self):
+       self.sim_network.restore()
+
+####Electrode
 
 class Electrode:
     def __init__(self, compartment):
@@ -25,20 +126,17 @@ class Electrode:
         self.compartment["mV"] = current
 
 
-class Brain:
+class Electrode_Brain:
     """
     Brains handle simulator-pools.
-
     More details inline.
     """
 
     def __init__(self, **kwargs):
         """
         Create a new Brain object to control neurons.
-
         Arguments:
             time_resolution (int : 500): Number of ns between "frames"
-
         """
         # Set defaults.
         # Time resolution is 0.5 millis
@@ -48,31 +146,27 @@ class Brain:
         self._neurons = []  # type: List[Neuron]
         self._synapses = []  # type: List[Synapse]
 
+
     def __getitem__(self, key):
         """
         Get a neuron or segment data.
-
         Arguments:
             key (str[2]): The index to look up in the network
-
         Returns:
             Segment
-
         """
-        if len(key) is 2:
+        if len(key) == 2:
             return self._graph.nodes["{}/{}".format(*key)]
         return self._graph.nodes[key]
+    
 
     def get_graph(self) -> nx.Graph:
         """
         Get the underlying networkx graph when compiled.
-
         Arguments:
             None
-
         Returns:
             networkx.Graph: The underlying compiled graph
-
         """
         if self.loaded:
             return self._graph
@@ -84,14 +178,11 @@ class Brain:
     def compile(self, reduce: bool = True):
         """
         Simplify the graph and load it into the networkx graph.
-
         Arguments:
             reduce (bool : True): Whether to attempt to reduce degree=2 edges
                 to a simplified, more optimized graph.
-
         Returns:
             None
-
         """
         self.loaded = True
         self._graph = nx.DiGraph()
@@ -108,15 +199,11 @@ class Brain:
     def step(self) -> bool:
         """
         Begin running the simulation.
-
         Return True on every step, unless an error is encountered.
-
         Arguments:
             None
-
         Returns:
             bool: True when successful, False otherwise.
-
         """
         _EPSILON = 2.0  # mV
 
@@ -147,15 +234,11 @@ class Brain:
     def add_neuron(self, neuron):
         """
         Add a new neuron to the network. Adds resultant connections.
-
         Cannot be run after a call to .compile().
-
         Arguments:
             neuron (electrode.Neuron): The neuron to add.
-
         Returns:
             None
-
         """
         if not isinstance(neuron, Neuron):
             raise TypeError("Neuron must implement electrode.neuron.Neuron.")
@@ -173,14 +256,11 @@ class Brain:
     ):
         """
         Add a new synapse to the network.
-
         Arguments:
             synapse (electrode.Synapse): The synapse to add
             source (str[2]): The presynaptic segment
             sink (str[2]): The postsynaptic segment
-
         Returns:
             None
-
         """
         self._synapses.append((source, sink, synapse))
