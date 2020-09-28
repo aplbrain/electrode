@@ -14,6 +14,8 @@ import networkx as nx
 #brian2
 from brian2 import * 
 
+############# Brian 2 #############
+
 class Brian2_NeuronModel:
     def __init__(self, neuron_list, activation_list, execTime, equation, threshold, refactory, method, reset=None):
         '''
@@ -55,13 +57,23 @@ class Brian2_NeuronModel:
 
 
     def setUpMonitors(self):
-        # monitors to record the data
+        '''
+        sets up the monitors to record the neuron groups
+
+        Returns
+        -------
+        state and spike monitors for the neuron group
+            DESCRIPTION.
+
+        '''
+        
         return StateMonitor(self.neuron_group, True , record=True), SpikeMonitor(self.neuron_group) 
 
         
 class Brian2_HodgkinHuxley(Brian2_NeuronModel):
     
     def __init__(self, neuron_list, activation_list, execTime, equation, threshold, refactory, method, reset=None):
+    
         #inherit from NeuronModel
         super().__init__(neuron_list, activation_list, execTime, equation, threshold, refactory, method, reset=None)
         
@@ -82,11 +94,9 @@ class Brian2_HodgkinHuxley(Brian2_NeuronModel):
     
 
 class Brian2_LeakyIntegrateandFire(Brian2_NeuronModel):
-    """
-    new_net = nx.relabel_nodes(net,node_dict) 
-    # relabel neuron string names with integer values (e.g. 'ADAL' == 0)
-    """
+    
     def __init__(self, neuron_list, activation_list, execTime, equation, threshold, refactory, method, reset=None):
+       
         
         #inherit from NeuronModel
         super().__init__(neuron_list, activation_list, execTime, equation, threshold, refactory, method, reset=None)
@@ -103,6 +113,7 @@ class Brian2_LeakyIntegrateandFire(Brian2_NeuronModel):
         self.neuron_group.v = self.neuron_group.namespace['vh'] #initial voltage
         self.neuron_group.g = self.neuron_group.namespace['g_leak'] 
 
+############# Electrode #############
 
 class Neuron:
     """

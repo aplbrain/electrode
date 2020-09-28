@@ -17,12 +17,12 @@ from ..synapse import Synapse
 #for brian2
 from brian2 import * 
 
-#####Brian 2
+############# Brian 2 #############
 
 class Brian2_Brain:
-    def __init__(self, **kwargs):
+    def __init__(self):
         '''
-        Create a new brain. 
+        Create a new brian2 brain. 
 
         '''
         self._neuron_groups = {}
@@ -32,30 +32,44 @@ class Brian2_Brain:
         self._spikemonitors = {}
   
     def add_group_of_neurons(self, node_list, group_name, neuronmodel):
-        """
-        Creates a brian2 neuron group for a group of neurons. 
-        
-        Arguments:
-            neuron (electrode.NeuronModel): The neuronmodel to add.
-        Returns:
-            None
-        """
-    
+        '''
+        Create a brian2 neuron group for a group of neurons. 
+
+        Parameters
+        ----------
+        node_list : list of str
+            list of the nodes to add to this neuron group.
+        group_name : str
+            name of this neuron group
+        neuronmodel : Brian2_NeuronModel
+            the neuron model to use
+
+        Returns
+        -------
+        None.
+
+        '''
        
         self._neuron_groups[group_name] = neuronmodel
         self._neuronmonitors[group_name], self._spikemonitors[group_name] =  self._neuron_groups[group_name].setUpMonitors()
         
         
     def add_single_neuron(self, node_name, neuronmodel):
-        """
-        Creates a brian2 neuron group for a single new neuron. 
-        
-        Arguments:
-            node_name
-            neuron (electrode.NeuronModel): The neuronmodel to add.
-        Returns:
-            None
-        """
+        '''
+        Creates a brian2 neuron group for a single new neuron.
+
+        Parameters
+        ----------
+        node_name : str
+            name of the node to create a neuron for
+        neuronmodel : Brian2_NeuronModel
+            the neuron model to use
+
+        Returns
+        -------
+        None.
+
+        '''
     
        
         self._neuron_groups[node_name] = neuronmodel
@@ -64,26 +78,31 @@ class Brian2_Brain:
 
 
     def add_synapses(self, synapse_group_name, source_ng, target_ng, edges, model, on_pre, **kwargs):
-        
-        ## todo pass kwargs to Synapses
         '''
-        Creates synapses. 
-        
+        Creates synapse between neuron groups following Brian2 
+
         Parameters
         ----------
-        
-        network: network class
-        edges: (source, target, weight)
-        model:
-        onpre:
-        **kwargs : 
-            delay: 
+        synapse_group_name : str
+            name for this synapse group.
+        source_ng : brian2 neuron group
+        target_ng : brian2 neuron group
+        edges : list of tuples
+            edges connecting the neurons in the groups
+        model : TYPE
+            DESCRIPTION.
+        on_pre : TYPE
+            DESCRIPTION.
+        **kwargs : TYPE
+            DESCRIPTION.
 
         Returns
         -------
         None.
 
         '''
+        ## todo pass kwargs to Synapses
+    
         self._synapses[synapse_group_name] = Synapses(source_ng.neuron_group, target_ng.neuron_group, model, on_pre, name='synapses*')
         
         for (u, v, c) in edges:
@@ -99,6 +118,19 @@ class Brian2_Brain:
          
 
     def run_simulation(self, time):
+        '''
+        run a brian2 simulation 
+
+        Parameters
+        ----------
+        time : int 
+            time in ms to run the simulation
+
+        Returns
+        -------
+        None.
+
+        '''
         
        if hasattr(self, 'sim_network') == False:
            self.sim_network = Network()
@@ -111,9 +143,17 @@ class Brian2_Brain:
        self.sim_network.run(time*ms)
        
     def reset_stimulation(self):
+        '''
+        reset the simulation to the starting point
+
+        Returns
+        -------
+        None.
+
+        '''
        self.sim_network.restore()
 
-####Electrode
+############# Electrode #############
 
 class Electrode:
     def __init__(self, compartment):
