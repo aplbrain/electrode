@@ -73,7 +73,7 @@ class HodgkinHuxley(NeuronModel):
 
     
 
-class LeakyIntegrateandFire(NeuronModel):
+class LeakyIntegratedandFire(NeuronModel):
     """
     new_net = nx.relabel_nodes(net,node_dict) 
     # relabel neuron string names with integer values (e.g. 'ADAL' == 0)

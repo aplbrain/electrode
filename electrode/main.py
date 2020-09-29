@@ -1,6 +1,6 @@
 from brainx import Brain
-from netx import Network
-from neuronModelx import NeuronModel
+from netx import Network as Ntx
+from neuronModelx import NeuronModel, LeakyIntegratedandFire, HodgkinHuxley
 import networkx as nx
 import timing
 from brian2 import *
@@ -42,7 +42,7 @@ def configureSynapses(net, brain):
     target = brain._neuron_groups['LIF_neurons']
     brain.add_synapses('HH_LIFsynapses', source, target, HH_LIFedges, smodel, on_pre)
 
-def createHHModel(aBrain):
+def createHHModel(aBrain, net):
     exectTime = 1*second
     
     eqs = Equations('''
@@ -55,15 +55,15 @@ def createHHModel(aBrain):
     threshold='v > -40*mV'
     refractory='v > -40*mV'
     method='exponential_euler' 
-    
+    reset='v= vr'
     activation_list = [.25*nA] * 199
     neuron_list = list(net.graph.nodes)[198:-1]
     
-    aBrain.add_group_of_neurons(neuron_list, 'HH_neurons', neuronModel.HodgkinHuxley(neuron_list, activation_list, exectTime, eqs, threshold, refractory, method, reset))
+    aBrain.add_group_of_neurons(neuron_list, 'HH_neurons', HodgkinHuxley(neuron_list, activation_list, exectTime, eqs, threshold, refractory, method, reset))
 
     return aBrain
 
-def createLIFModel(aBrain):
+def createLIFModel(aBrain, net):
     
     #set up the inputs for the LIF model
     exectTime = 1*second
@@ -87,7 +87,7 @@ def createLIFModel(aBrain):
 
     #add the LIF neuron group
     aBrain.add_group_of_neurons(
-        neuron_list, 'LIF_neurons', neuronModel.LeakyIntegrateandFire(
+        neuron_list, 'LIF_neurons', LeakyIntegratedandFire(
             neuron_list, activation_list, exectTime, eqs, threshold, refractory, method, reset
         )
     )
@@ -101,7 +101,7 @@ def createBrain():
     #'''
     #graph = nx.read_graphml('c_elegans_control.graphml')
     #print(type(graph))
-    net = Network(graph = nx.read_graphml('c_elegans_control.graphml'))
+    net = Ntx(graph = nx.read_graphml('c_elegans_control.graphml'))
     #'''
 
     #print info on the graph
@@ -121,9 +121,9 @@ def main():
 
     brain, net = createBrain()
     
-    brain = createLIFModel(brain)
+    brain = createLIFModel(brain, net)
 
-    brain = createHHModel(brain)
+    brain = createHHModel(brain, net)
 
     configureSynapses(net, brain)
     
