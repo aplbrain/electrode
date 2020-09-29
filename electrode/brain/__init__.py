@@ -142,7 +142,7 @@ class Brian2_Brain:
            self.sim_network.store()
        self.sim_network.run(time*ms)
        
-    def reset_stimulation(self):
+    def reset_simulation(self):
         '''
         reset the simulation to the starting point
 
