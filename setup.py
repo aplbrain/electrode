@@ -9,8 +9,9 @@ Simulate brains.
 from os import path
 from codecs import open as copen
 from setuptools import setup, find_packages
-from electrode import __version__
+# from electrode import __version__
 
+__version__ = "0.2.0"
 
 here = path.abspath(path.dirname(__file__))
 
